@@ -1,0 +1,47 @@
+$directions := a y x l r t b
+$spacer = 8px
+$spacing-multiplier := 0 0.5 1 2 3 4 6 9 12
+// outputs according to levels:
+// 0: 0px
+// 1: 4px
+// 2: 8px
+// 3: 16
+// 4: 24
+// 5: 32
+// 6: 48
+// 7: 72
+// 8: 96
+
+$spacing(prop, dir, lvl)
+  space = lvl == auto ? auto:$spacer*$spacing-multiplier[lvl]
+  if dir == a
+    {prop}: space
+  else if dir == x
+    {prop}-left: space
+    {prop}-right: space
+  else if dir == y
+    {prop}-top: space
+    {prop}-bottom: space
+  else if dir == l
+    {prop}-left: space
+  else if dir == r
+    {prop}-right: space
+  else if dir == t
+    {prop}-top: space
+  else if dir == b
+    {prop}-bottom: space
+
+
+m(dir = 'a', lvl = 'auto')
+  $spacing(margin, dir, lvl)
+
+p(dir = 'a', lvl = 'auto')
+  $spacing(padding, dir, lvl)
+
+//for i in (0..5)
+//  for d in $directions
+//    #__\$nd__
+//      .m{d}-{i}
+//        m(d, i)
+//      .p{d}-{i}
+//        p(d, i)
