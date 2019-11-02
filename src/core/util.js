@@ -1,3 +1,17 @@
+// key
+const keyPool = {}
+
+export function genKey() {
+	const gen = () => Math.random().toString(16).substr(2, 12)
+	let key = gen()
+	while (keyPool.hasOwnProperty(key)) {
+		key = gen()
+	}
+	keyPool[key] = true
+	return key
+}
+
+// dom
 export function element (tagName, className) {
 	let el = document.createElement(tagName)
 	if (className && className.trim()) {
@@ -18,7 +32,11 @@ export function toggleClass (el, className) {
 	el.classList.toggle(className)
 }
 export function remove (parent, selector){
-	const el = parent.querySelector(selector)
+	let el = selector
+	if (typeof selector == 'string'){
+		el = parent.querySelector(selector)
+	}
+	if (!selector instanceof Node) return
 	if (el) parent.removeChild(el)
 }
 export const insertBefore = (target, el) => target.insertAdjacentElement('beforebegin', el)
@@ -27,11 +45,16 @@ export const insertAfter = (target, el) => target.insertAdjacentElement('afteren
 export function findUpAttr (el, attrName, thresholdClass = 'nib-editor') {
 	while (el.parentNode) {
 		el = el.parentNode
-		if (el.hasAttribute(attrName)) {
-			return el
-		} else if (el.classList.contains(thresholdClass)) {
-			break
-		}
+		if (el.hasAttribute(attrName)) return el
+		else if (el.classList.contains(thresholdClass)) break
+	}
+	return null
+}
+
+export function findTextNode (el) {
+	while (el.firstChild){
+		el = el.firstChild
+		if (el.nodeType == 3) return el
 	}
 	return null
 }
@@ -48,18 +71,9 @@ export function clickOutside (target, callback) {
 }
 
 export const emit = (target, event, data) => target.dispatchEvent(new CustomEvent(event, { detail: data }))
-// export const svg = (str) => {
-// 	let m = str.match(/^<[\w+,-]+/)[0], index
-// 	if (m) {
-// 		index = m.length
-// 		return str.slice(0, index) + ` class="nib-icon"` + str.slice(index)
-// 	} else {
-// 		return str
-// 	}
-// }
 
 // text
-export const content = (el) => {
+export const textContent = (el) => {
 	let text = ''
 	if (el.childNodes){
 		el.childNodes.forEach(i=>{
@@ -80,14 +94,6 @@ export const setCaret = (node) => {
 	range.collapse()
 	sel.removeAllRanges()
 	sel.addRange(range)
-}
-export const isCaretIn = (node) => {
-	let sel = window.getSelection()
-	if (sel && sel.rangeCount > 0) {
-		let parent = locateCaret().node
-		return node.contains(parent) || node == parent
-	}
-	return false
 }
 export const locateCaret = () => {
 	let sel = window.getSelection()

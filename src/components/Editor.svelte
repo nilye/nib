@@ -3,6 +3,7 @@
 		on:keyup={ onKeyup }
 		on:keydown={ onKeydown }
 ></svelte:window>
+<Toolbar></Toolbar>
 <div class="nib-editor"
      contenteditable="true"
      on:input={ onInput }
@@ -10,97 +11,99 @@
      on:compositionend={ onCompositionEnd }
      bind:this={ editorNode }>
 	<Insertion first={true}></Insertion>
-	{#each $Content as prime, index (prime.key)}
-		<div class="nib-blk"
+	{#each $model as prime, index (prime.key)}
+		<div class="nib-prime"
 		     data-key={prime.key}
+		     data-index={index}
 		     data-type={prime.type}
-		     data-nib-blk="true">
+		     data-nib-prime="true">
 			<Insertion index={index}></Insertion>
-			<div class="nib-blk-ctrl" contenteditable="false">
-				<div class="nib-blk-handle"></div>
+			<div class="nib-prime-ctrl" contenteditable="false">
+				<div class="nib-prime-handle"></div>
 				<Menu
 						key={ prime.key }
-						items={ blks[prime.key] ? blks[prime.key].menu() : [] }
+						items={ primes[prime.key] ? primes[prime.key].menu() : [] }
 				></Menu>
 			</div>
 			<svelte:component
 					this={manifesto[prime.type]}
-					bind:this={blks[prime.key]}
+					bind:this={primes[prime.key]}
 					key={prime.key}
-					index={index}
+					indexes={[index]}
+					isPrime={true}
 			></svelte:component>
 		</div>
 	{/each}
 </div>
 
 <script>
-	import eventBus from '../module/eventbus'
 	import { onMount, setContext } from 'svelte'
 	import Insertion from './Insertion.svelte'
-	import manifesto from '../blocks/manifest'
-	import { Content } from '../module/store'
 	import Menu from './Menu.svelte'
-	import Sel from '../core/sel'
-	import schema from '../module/schema'
+	import Toolbar from './Toolbar.svelte'
+	import manifesto from '../blocks/manifest'
 
 	export let editorNode
 	export let config
+	export let model
+	export let selection
+	export let formatter
 	let inputIsComposing = false
-	let selection
-	let blks = {}
-	let activeBlk = {}
-	let endBlk = {}
+	let sel = {}
+	let primes = {}
+	let activePrime = {}
+	let endPrime = {}
 
-	//
-	Content.subscribe(v=>console.log(v))
-
-	//
-	setContext('config', config)
-	onMount(() => {
-		new Sel(editorNode).onChange(e=>onSelectChange(e))
-		const addBlkEvt = eventBus.on('addBlk', addBlk)
-		return () => {
-			addBlkEvt.off()
-		}
+	// Content.subscribe(v=>console.log(v))
+	if (config && model && selection){
+		setContext('_' , { config, model, selection, formatter})
+	}
+	onMount(()=>{
+		selection.onChange(e => onSelectChange(e))
 	})
 
 	/*
 	* binding events
 	* */
-	function onSelectChange(e){
-		selection = e
-		activeBlk = blks[e.startKey]
-		endBlk = blks[e.endKey]
-		let inactiveBlk = blks[e.lastActiveKey]
-		if (e.focused && activeBlk) {
-			if (activeBlk.onSelect) activeBlk.onSelect(e)
-			if (activeBlk.onFocus) activeBlk.onFocus(e)
-			if (inactiveBlk && inactiveBlk.onBlur) blks[e.lastActiveKey].onBlur(e)
-		} else if (inactiveBlk){
-			if (inactiveBlk.onBlur) blks[e.lastActiveKey].onBlur(e)
+	function onSelectChange (e) {
+		sel = e
+		console.log(e, primes)
+		activePrime = primes[e.startPrimeKey]
+		endPrime = primes[e.endPrimeKey]
+		let inactivePrime = primes[e.lastPrimeKey]
+		if (e.focused && activePrime) {
+			if (activePrime.onSelect) activePrime.onSelect(e)
+			if (activePrime.onFocus) activePrime.onFocus(e)
+			if (inactivePrime && inactivePrime.onBlur) inactivePrime.onBlur(e)
+		} else if (inactivePrime) {
+			if (inactivePrime.onBlur) inactivePrime.onBlur(e)
 		}
 	}
+
 	// editor
 	function onCompositionStart () {
 		inputIsComposing = true
 	}
+
 	function onCompositionEnd (e) {
 		inputIsComposing = false
 		onInput(e)
 	}
-	function onInput (e) {
-		if (activeBlk.onInput)activeBlk.onInput(e)
-		if (endBlk.onInput) endBlk.onInput(e)
-	}
 
-	// window
+	function bindEvents(type, e){
+		if (activePrime){
+			if (typeof activePrime[type] === 'function') activePrime[type](e)
+			if (!sel.samePrime && typeof endPrime[type] === 'function') endPrime[type](e)
+		}
+	}
+	function onInput (e) {
+		bindEvents('onInput', e)
+	}
 	function onKeyup (e) {
-		if (activeBlk.onKeyup) activeBlk.onKeyup(e)
-		if (endBlk.onKeyup) endBlk.onKeyup(e)
+		bindEvents('onKeyup', e)
 	}
 	function onKeydown (e) {
-		if (activeBlk.onKeydown) activeBlk.onKeydown(e)
-		if (endBlk.onKeydown) endBlk.onKeydown(e)
+		bindEvents('onKeydown', e)
 	}
 
 </script>

@@ -5,6 +5,9 @@
 @import "reader.styl"
 
 .nib
+  &-container
+    position relative
+
   &-editor[contenteditable="true"]
     outline: none
     font-size: 16px
@@ -16,7 +19,7 @@
       -webkit-user-select none
       -moz-user-select none
 
-  &-blk
+  &-prime
     position relative
     min-height 24px
     &-ctrl
@@ -54,8 +57,12 @@
     p(y, 2)
     z-index: 100000000000
     background $t.bg
+    color: $t.text1
     font-size: 14px
+    font-weight 500
     display none
+    .nib-icon
+      color: $t.text2
     &._active
       display block
     &-divider
@@ -66,7 +73,7 @@
       display flex
       align-items center
       p(x, 3)
-      p(y, 1)
+      p(y, 2)
       cursor: pointer
       svg.nib-icon
         height 20px
@@ -98,6 +105,47 @@
       position: relative
       bottom: 0
       top: 0
+
+  &-toolbar
+    position: absolute
+    height 32px
+    p(x,2)
+    border-radius 4px
+    transform translateX(-50%)
+    background $t.text1
+    z-index 1000000000000000
+    display none
+    align-items center
+    user-select: none
+    -webkit-user-select: none
+    &._active
+      display flex
+    &:after
+      content ''
+      width 0
+      border 8px solid transparent
+      border-top-color $t.text1
+      position absolute
+      bottom -16px
+      left 50%
+      margin-left -8px
+    .nib-icon-btn
+      box-sizing content-box
+      width 16px
+      height 16px
+      p(a,1)
+      &:hover
+        background rgba($t.text2, 0.5)
+      &._active
+        .nib-icon
+          color: $t.pri
+    &-divider
+      height 16px
+      border-left 1px solid $t.text3
+      m(x,2)
+
+
+
 
 
 

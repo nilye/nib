@@ -1,0 +1,1 @@
+ svgo -f src/assets/icon/ --config=src/assets/icon/config.json

@@ -1,4 +1,4 @@
-import { genKey } from './util'
+import { genKey } from '../core/util'
 
 class EventBus {
 	constructor () {

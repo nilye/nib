@@ -11,7 +11,8 @@
 			</div>
 		{/each}
 		<div class="nib-menu-divider"></div>
-		<div class="nib-menu-tile" on:mouseup="{()=> menuActive = false}">
+		<div class="nib-menu-tile"
+		     on:click="{()=> menuActive = false}">
 			{@html trash}
 			<div>Delete</div>
 		</div>
@@ -22,7 +23,7 @@
 	import chevronDown from '../assets/icon/chevron-down.svg'
 	import trash from '../assets/icon/trash.svg'
 	import { onMount } from 'svelte'
-	import { clickOutside } from '../core/dom'
+	import { clickOutside } from '../core/util'
 
 	export let items = []
 	export let type = 'p'

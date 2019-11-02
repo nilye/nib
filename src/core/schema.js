@@ -7,7 +7,7 @@ const schema = {
 			kind: 'prime',
 			type: a['type'] || 'p'
 		},
-		a.data && { data: a.data },
+		a.model && { data: a.model },
 		a.nodes && { nodes: a.nodes })
 	},
 	text(a = {}){

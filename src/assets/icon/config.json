@@ -1,0 +1,15 @@
+{
+  "plugins":[{
+    "removeXMLNS": true
+  },{
+    "addAttributesToSVGElement": {
+      "attributes": [
+        {"viewBox": "0 0 24 24"}
+      ]
+    }
+  },{
+    "addClassesToSVGElement":{
+      "className": "nib-icon"
+    }
+  }]
+}

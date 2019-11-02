@@ -37,7 +37,7 @@ module.exports = {
 			loader: 'svg-inline-loader',
 			options: {
 				removeTags: true,
-				removingTagAttrs: ['xmlns', 'fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin'],
+				removingTagAttrs: ['xmlns', 'fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin', 'stroke-miterlimit'],
 			}
 		}]
 	},
