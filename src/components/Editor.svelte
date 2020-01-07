@@ -1,35 +1,29 @@
 <svelte:options accessors={true}></svelte:options>
-<svelte:window
-		on:keyup={ onKeyup }
-		on:keydown={ onKeydown }
-></svelte:window>
 <Toolbar></Toolbar>
 <div class="nib-editor"
      contenteditable="true"
-     on:input={ onInput }
-     on:compositionstart={ onCompositionStart }
-     on:compositionend={ onCompositionEnd }
+     autocapitalize="off"
+     autocomplete="off"
+     autocorrect="off"
+     spellcheck="false"
      bind:this={ editorNode }>
 	<Insertion first={true}></Insertion>
-	{#each $model as prime, index (prime.key)}
+	{#each storeVal as prime, index (prime.key)}
 		<div class="nib-prime"
 		     data-key={prime.key}
-		     data-index={index}
 		     data-type={prime.type}
-		     data-nib-prime="true">
+		     data-nib-blk="true">
 			<Insertion index={index}></Insertion>
 			<div class="nib-prime-ctrl" contenteditable="false">
 				<div class="nib-prime-handle"></div>
 				<Menu
 						key={ prime.key }
-						items={ primes[prime.key] ? primes[prime.key].menu() : [] }
-				></Menu>
+						items={manifesto[prime.type].menu}></Menu>
 			</div>
 			<svelte:component
-					this={manifesto[prime.type]}
-					bind:this={primes[prime.key]}
+					this={manifesto[prime.type].component}
 					key={prime.key}
-					indexes={[index]}
+					path={[index]}
 					isPrime={true}
 			></svelte:component>
 		</div>
@@ -45,27 +39,35 @@
 
 	export let editorNode
 	export let config
-	export let model
+	export let store
 	export let selection
 	export let formatter
-	let inputIsComposing = false
-	let sel = {}
-	let primes = {}
-	let activePrime = {}
-	let endPrime = {}
+	export let eventBus
+	let storeVal = []
 
-	// Content.subscribe(v=>console.log(v))
-	if (config && model && selection){
-		setContext('_' , { config, model, selection, formatter})
+	console.log(manifesto)
+	if (config && store && selection && formatter && eventBus){
+		setContext('_' , {
+			config,
+			store,
+			selection,
+			formatter,
+			eventBus
+		})
+		store.subscribe(()=> {
+			storeVal = store.getState()
+		})
+		store.dispatch({type:''})
 	}
 	onMount(()=>{
-		selection.onChange(e => onSelectChange(e))
+		eventBus.bindEditor(editorNode)
+		// selection.onChange(e => onSelectChange(e))
 	})
 
 	/*
 	* binding events
 	* */
-	function onSelectChange (e) {
+/*	function onSelectChange (e) {
 		sel = e
 		console.log(e, primes)
 		activePrime = primes[e.startPrimeKey]
@@ -97,13 +99,15 @@
 		}
 	}
 	function onInput (e) {
-		bindEvents('onInput', e)
+		if (!inputIsComposing){
+			bindEvents('onInput', e)
+		}
 	}
 	function onKeyup (e) {
 		bindEvents('onKeyup', e)
 	}
 	function onKeydown (e) {
 		bindEvents('onKeydown', e)
-	}
+	}*/
 
 </script>

@@ -7,17 +7,16 @@
 
 <script>
 	import plus from '../assets/icon/plus.svg'
-	import Model from '../core/model'
-	import schema from '../core/schema'
+	import schema from '../model/schema'
 
 	export let index = -1
 	export let first = false
 	function insert () {
 		// Content.update(v => {
 		// 	if (first){
-		// 		v.unshift(schema.prime())
+		// 		v.unshift(schema.block())
 		// 	} else {
-		// 		v.splice(index+1, 0, schema.prime())
+		// 		v.splice(index+1, 0, schema.block())
 		// 	}
 		// 	return v
 		// })

@@ -28,15 +28,16 @@ class Formatter {
 		Object.assign(this.formats, formats)
 	}
 
-	render (el, attr){
-		if (!attr) {
+	render (node){
+		if (!node.attr) {
 			let span = element('span')
 			span.innerText = el
 			return span
 		}
-		for (let a in attr){
+		let el = node.text
+		for (let a in node.attr){
 			if (this.formats.hasOwnProperty(a)){
-				el = this.formats[a].render(el, attr[a])
+				el = this.formats[a].render(el, node.attr[a])
 			}
 		}
 		return el

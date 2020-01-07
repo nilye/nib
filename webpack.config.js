@@ -1,4 +1,5 @@
 const path = require('path')
+const webpack = require('webpack')
 const TerserPlugin = require('terser-webpack-plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin')
@@ -13,9 +14,10 @@ module.exports = {
 	},
 	optimization: {
 		minimize: true,
-		minimizer: [new TerserPlugin({
-			extractComments: false
-		}),
+		minimizer: [
+			new TerserPlugin({
+				extractComments: false
+			}),
 			new OptimizeCSSAssetsPlugin()
 		]
 	},
@@ -41,7 +43,13 @@ module.exports = {
 			}
 		}]
 	},
-	plugins: [new MiniCssExtractPlugin({
-		filename: 'main.css'
-	})]
+	plugins: [
+		new MiniCssExtractPlugin({
+			filename: 'main.css'
+		}),
+		//https://stackoverflow.com/questions/43694367/you-are-currently-using-minified-code-outside-of-node-env-production-this
+		new webpack.DefinePlugin({
+			'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
+		})
+	]
 }

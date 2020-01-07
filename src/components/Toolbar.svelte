@@ -20,8 +20,9 @@
 <script>
 	import { onMount, getContext } from 'svelte'
 	import cleanIcon from '../assets/icon/clean-format.svg'
+	import { formatSelection } from '../model/operation'
 
-	const { selection, model, formatter} = getContext('_')
+	const { selection, store, formatter } = getContext('_')
 	const items = [formatter.toolbar()]
 	let toolbarNode, nibContainer, sel, x, y, show
 	let activeAttr = {}
@@ -32,7 +33,7 @@
 	})
 
 	function onSelect (e) {
-		if (!e.sel.isCollapsed && nibContainer) {
+		if (!e.isCollapsed && nibContainer && e.sel) {
 			let range = e.sel.getRangeAt(0),
 					rangeRect = range.getBoundingClientRect(),
 					contRect = nibContainer.getBoundingClientRect()
@@ -48,12 +49,13 @@
 	}
 
 	function onClick (formatName) {
-		let toggle = true
+		let value = true
 		if (activeAttr[formatName] &&
 				formatter.allContain(selection.sel, formatName)){
-			toggle = false
+			value = false
 		}
-		model.format(selection.sel, formatter[formatName], toggle)
+		const newSelRange = formatSelection(store, selection.sel, formatter[formatName], value)
+		selection.reSelect(newSelRange)
 	}
 
 </script>

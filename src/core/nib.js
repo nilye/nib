@@ -1,11 +1,12 @@
 import Editor from '../components/Editor.svelte'
 import { addClass } from './util'
-import { get } from 'svelte/store'
-import Model from './model'
-import Selection from './selection'
 import defaultConfig from './config'
-import schema from './schema'
+import schema from '../model/schema'
+import Selection from './selection'
 import Formatter from './formatter'
+import { createStore } from 'redux'
+import { reducer } from '../model/reducer'
+import EventBus from './event'
 
 class Nib {
 
@@ -22,10 +23,13 @@ class Nib {
 		if (initData && !Array.isArray(this.initData)) {
 			throw TypeError('initData has to be an array:' + this.initData)
 		}
-		this.initData = initData || [schema.prime()]
-		this.model = new Model(this.initData)
-		this.selection = new Selection(this.target)
+		this.initData = initData || [schema.paragraph([
+			schema.text({text:"Filmmakers would generally prefer that their films, when shown in theaters (i.e. when the visual spectacle is supposed to be at its best), don't have subtitles, to maximize the aesthetic presentation of the film. ... And even when they do that, the act of reading by itself is distracting from other elements on the screen."})
+			])]
+		this.store = createStore(reducer, this.initData)
+		this.selection = new Selection(this.target, this.store)
 		this.formatter = new Formatter()
+		this.eventBus = new EventBus(this.selection)
 		this.config = {}
 		Object.assign(this.config, defaultConfig, config)
 		this.createEditor()
@@ -38,9 +42,10 @@ class Nib {
 			target: this.target,
 			props: {
 				config: this.config,
-				model: this.model,
+				store: this.store,
 				selection: this.selection,
-				formatter: this.formatter
+				formatter: this.formatter,
+				eventBus: this.eventBus
 			}
 		})
 	}
@@ -50,7 +55,7 @@ class Nib {
 	}
 
 	data () {
-		return this.model.data
+		return this.store.getState()
 	}
 }
 

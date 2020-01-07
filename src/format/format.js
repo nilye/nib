@@ -1,4 +1,5 @@
 import { element } from '../core/util'
+import { clone } from '../model/util'
 
 class Format {
 	constructor (name, tagName, className){
@@ -7,16 +8,19 @@ class Format {
 		this.name = name
 	}
 
-	// modify text attr in Model data
-	setAttr(obj, value){
+	// modify text attr in Operation data
+	setAttr(data, value){
+		let obj = clone(data)
 		if (value) {
 			if (!obj.attr) obj.attr = {}
 			obj.attr[this.name] = value
 		}
 		else {
-			delete obj.attr[this.name]
+			if (obj.attr.hasOwnProperty(this.name)){
+				delete obj.attr[this.name]
+			}
 			if (Object.keys(obj.attr).length === 0 ){
-				delete 	obj.attr
+				delete obj.attr
 			}
 		}
 		return obj

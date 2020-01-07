@@ -51,7 +51,7 @@ export function findUpAttr (el, attrName, thresholdClass = 'nib-editor') {
 	return null
 }
 
-export function findTextNode (el) {
+export function findTextProgeny (el) {
 	while (el.firstChild){
 		el = el.firstChild
 		if (el.nodeType == 3) return el
