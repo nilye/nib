@@ -125,6 +125,21 @@ export function findBlk(obj, key){
 	return { blkVal, blkPath }
 }
 
+
+export function findMark(blkVal, nodeIndex, offset) {
+	let nodes = [], mark = 0
+	if (Array.isArray(blkVal)) nodes = blkVal
+	if (blkVal.nodes && Array.isArray(blkVal.nodes)) nodes = blkVal.nodes
+	for (let i = 0; i < nodes.length; i++){
+		if (i < nodeIndex){
+			mark += nodes[nodeIndex].text.length
+		}
+		if (i == nodeIndex) {
+			mark += offset
+		}
+	}
+	return mark
+}
 /**
  * find start and end index of character, according to the nodes and offsets.
  * @param {object} blk

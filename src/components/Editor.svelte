@@ -24,8 +24,8 @@
 					this={manifesto[prime.type].component}
 					key={prime.key}
 					path={[index]}
-					isPrime={true}
-			></svelte:component>
+					isPrime={true}>
+			</svelte:component>
 		</div>
 	{/each}
 </div>

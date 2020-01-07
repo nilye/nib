@@ -1,9 +1,9 @@
 import { findTextProgeny, findUpAttr, genKey, qs } from './util'
-import { findBlk } from '../model/util'
+import { findBlk, findMark } from '../model/util'
 
 class Selection {
 	constructor (editor, store) {
-		if (!editor || editor instanceof Node == false) {
+		if (!editor || editor instanceof Node === false) {
 			throw TypeError('editor is not a node ' + editor)
 		}
 		this.editor = editor
@@ -59,21 +59,37 @@ class Selection {
 				startBlk = findUpAttr(anchorNode, 'data-nib-blk'),
 				endNode = findUpAttr(focusNode, 'data-nib-text'),
 				endBlk = findUpAttr(focusNode, 'data-nib-blk')
-			let anchorNodeIndex = startNode.getAttribute('data-offset').split(':')[1],
-				anchorKey = startBlk.getAttribute('data-key')
+			let anchorNodeIndex = parseInt(startNode.getAttribute('data-offset').split(':')[1]),
+				anchorKey = startBlk.getAttribute('data-key'),
+				anchorBlk = findBlk(storeVal, anchorKey)
+			//
+			let focusNodeIndex = parseInt(endNode.getAttribute('data-offset').split(':')[1]),
+				focusKey = endBlk.getAttribute('data-key'),
+				focusBlk = findBlk(storeVal, focusKey)
+			/*
+			* assign selection var
+			* -- Terminology --
+				 anchor: starting point
+				 focus: ending point
+				 key: key of blk
+				 path: path of blk access keys in store
+				 node: text node index in blk
+				 offset: char index in a text node
+				 mark: overall char index in a blk
+			* */
 			selection['anchor'] = {
 				key: anchorKey,
-				path: findBlk(storeVal, anchorKey).blkPath,
-				node: parseInt(anchorNodeIndex),
-				offset: anchorOffset
+				path: anchorBlk.blkPath,
+				node: anchorNodeIndex,
+				offset: anchorOffset,
+				mark: findMark(anchorBlk.blkVal, anchorNodeIndex, anchorOffset)
 			}
-			let focusNodeIndex = endNode.getAttribute('data-offset').split(':')[1],
-				focusKey = endBlk.getAttribute('data-key')
 			selection['focus'] = {
 				key: focusKey,
-				path: findBlk(storeVal, focusKey).blkPath,
-				node: parseInt(focusNodeIndex),
-				offset: focusOffset
+				path: focusBlk.blkPath,
+				node: focusNodeIndex,
+				offset: focusOffset,
+				mark: findMark(focusBlk.blkVal, focusNodeIndex, focusOffset)
 			}
 			selection.isCollapsed = sel.isCollapsed
 			selection.blurKey =  this.sel.anchor.key == selection.anchor.key ? null : (this.sel.anchor.key || null)
