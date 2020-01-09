@@ -1,4 +1,4 @@
-import { clone, findBlk, setValue, splitNode } from './util'
+import { clone, setValue} from './util'
 
 export function reducer (state, action) {
 	if (methods.hasOwnProperty(action.type)){

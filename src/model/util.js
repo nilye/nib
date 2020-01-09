@@ -125,14 +125,20 @@ export function findBlk(obj, key){
 	return { blkVal, blkPath }
 }
 
-
+/**
+ * find mark (char index inside a blk)
+ * @param blkVal
+ * @param nodeIndex
+ * @param offset
+ * @returns {number}
+ */
 export function findMark(blkVal, nodeIndex, offset) {
 	let nodes = [], mark = 0
 	if (Array.isArray(blkVal)) nodes = blkVal
 	if (blkVal.nodes && Array.isArray(blkVal.nodes)) nodes = blkVal.nodes
 	for (let i = 0; i < nodes.length; i++){
 		if (i < nodeIndex){
-			mark += nodes[nodeIndex].text.length
+			mark += nodes[i].text.length
 		}
 		if (i == nodeIndex) {
 			mark += offset
@@ -140,6 +146,36 @@ export function findMark(blkVal, nodeIndex, offset) {
 	}
 	return mark
 }
+
+/**
+ *
+ * @param blkVal
+ * @param mark
+ * @returns {{offset: (*|number), nodeIndex: (*|number)}}
+ */
+export function reverseMark(blkVal, mark){
+	let nodes = [], nodeIndex, offset
+	if (Array.isArray(blkVal)) nodes = blkVal
+	if (blkVal.nodes && Array.isArray(blkVal.nodes)) nodes = blkVal.nodes
+	for (let i = 0; i < nodes.length; i++){
+		let item = nodes[i], len = item.text.length
+		console.log(mark, len, nodeIndex, offset)
+		if (mark > len){
+			mark -= len
+		}
+		else if (mark == len){
+			nodeIndex = i + 1
+			offset = 0
+			break
+		} else {
+			nodeIndex = i
+			offset = len - mark
+			break
+		}
+	}
+	return {nodeIndex, offset}
+}
+
 /**
  * find start and end index of character, according to the nodes and offsets.
  * @param {object} blk

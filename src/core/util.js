@@ -42,23 +42,6 @@ export function remove (parent, selector){
 export const insertBefore = (target, el) => target.insertAdjacentElement('beforebegin', el)
 export const insertAfter = (target, el) => target.insertAdjacentElement('afterend', el)
 
-export function findUpAttr (el, attrName, thresholdClass = 'nib-editor') {
-	while (el.parentNode) {
-		el = el.parentNode
-		if (el.hasAttribute(attrName)) return el
-		else if (el.classList.contains(thresholdClass)) break
-	}
-	return null
-}
-
-export function findTextProgeny (el) {
-	while (el.firstChild){
-		el = el.firstChild
-		if (el.nodeType == 3) return el
-	}
-	return null
-}
-
 // event
 export function listen (target, event, callback) {
 	target.addEventListener(event, callback)
@@ -86,7 +69,6 @@ export const textContent = (el) => {
 }
 
 // selection & range
-export const sel = () => window.getSelection()
 export const setCaret = (node) => {
 	let range = document.createRange(),
 		sel = window.getSelection()
@@ -94,10 +76,4 @@ export const setCaret = (node) => {
 	range.collapse()
 	sel.removeAllRanges()
 	sel.addRange(range)
-}
-export const locateCaret = () => {
-	let sel = window.getSelection()
-	let node = sel.anchorNode
-	let offset = sel.anchorOffset
-	return { node, offset }
 }

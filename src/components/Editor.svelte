@@ -45,7 +45,6 @@
 	export let eventBus
 	let storeVal = []
 
-	console.log(manifesto)
 	if (config && store && selection && formatter && eventBus){
 		setContext('_' , {
 			config,

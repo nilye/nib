@@ -1,11 +1,11 @@
-import Paragraph from './paragraph.svelte'
+import Text from './Text.svelte'
 import paragraphIcon from '../assets/icon/paragraph.svg'
 import heading1Icon from '../assets/icon/heading1.svg'
 import heading2Icon from '../assets/icon/heading2.svg'
 import heading3Icon from '../assets/icon/heading3.svg'
 
 const text = {
-	component: Paragraph,
+	component: Text,
 	menu: [
 		{
 			icon: paragraphIcon,

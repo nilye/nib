@@ -2,12 +2,14 @@
      style="left: {x}px; top: {y}px;"
      class:_active={show}
      bind:this={toolbarNode}>
-	{#each items[0] as item}
-		<div class="nib-icon-btn round"
-		     class:_active={activeAttr[item.name]}
-		     on:mouseup|stopPropagation={()=>onClick(item.name)}>
-			{@html item.icon}
-		</div>
+	{#each items as slot}
+		{#each slot as item}
+			<div class="nib-icon-btn round"
+			     class:_active={activeAttr[item.name]}
+			     on:mouseup|stopPropagation={()=>onClick(item.name)}>
+				{@html item.icon}
+			</div>
+		{/each}
 	{/each}
 	{#if activeAttr.isDirty}
 		<div class="nib-toolbar-divider"></div>
@@ -20,10 +22,11 @@
 <script>
 	import { onMount, getContext } from 'svelte'
 	import cleanIcon from '../assets/icon/clean-format.svg'
-	import { formatSelection } from '../model/operation'
+	import { formatSelection } from '../model/operator'
 
 	const { selection, store, formatter } = getContext('_')
-	const items = [formatter.toolbar()]
+	const items = [formatter.toolbar.basic]
+	console.log(items)
 	let toolbarNode, nibContainer, sel, x, y, show
 	let activeAttr = {}
 	selection.onChange(e => onSelect(e))
@@ -41,7 +44,7 @@
 			y = rangeRect.y - contRect.y - 40
 			show = true
 			if (e.startNode) {
-				activeAttr = formatter.contains(e)
+				activeAttr = formatter.has(e)
 			}
 		} else {
 			show = false
@@ -51,11 +54,11 @@
 	function onClick (formatName) {
 		let value = true
 		if (activeAttr[formatName] &&
-				formatter.allContain(selection.sel, formatName)){
+				formatter.allHas(selection.sel, formatName)){
 			value = false
 		}
-		const newSelRange = formatSelection(store, selection.sel, formatter[formatName], value)
-		selection.reSelect(newSelRange)
+		formatSelection(store, selection.sel, formatter.formats[formatName], value)
+		selection.reSelect()
 	}
 
 </script>

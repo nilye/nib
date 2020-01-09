@@ -5,23 +5,15 @@ import Strike from '../format/strike'
 import { element } from './util'
 
 class Formatter {
-	constructor (formats){
+	constructor (_default = true){
 		this.formats = {}
-		this.formats[Bold.name] = Bold
-		this.formats[Italic.name] = Italic
-		this.formats[Underline.name] = Underline
-		this.formats[Strike.name] = Strike
-		if (formats){
-			this.register(formats)
+		this.toolbar = {}
+		if (_default){
+			this.toolbar.basic = [Bold, Italic, Underline, Strike]
+			for (let k of this.toolbar.basic) {
+				this.formats[k.name] = k
+			}
 		}
-		for (let k in this.formats) {
-			this[k] = this.formats[k]
-		}
-	}
-
-	toolbar () {
-		let k = Object.keys(this.formats)
-		return k.map((x)=>this.formats[x])
 	}
 
 	register (formats) {
@@ -43,30 +35,11 @@ class Formatter {
 		return el
 	}
 
-	selectedFragment(sel){
-		const range = sel.sel.getRangeAt(0)
-		let fragment = range.cloneContents()
-		fragment.append(sel.startNode.cloneNode(true))
-		fragment.append(sel.endNode.cloneNode(true))
-		return fragment
+	activeAttr (sel) {
+
 	}
 
-	contains (sel) {
-		const fragment = this.selectedFragment(sel)
-		// if any node contains
-		let attr = {}
-		for (let f in this.formats){
-			if (this.formats.hasOwnProperty(f)) {
-				const format = this.formats[f]
-				attr[format.name] = format.isContained(fragment)
-				if (attr[format.name]) attr.isDirty = true
-			}
-		}
-		return attr
-		// if all node contains
-	}
-
-	allContain (sel, formatName){
+	allHas (sel, formatName){
 		const fragment = this.selectedFragment(sel)
 		let textNodes = fragment.querySelectorAll('[data-nib-text="true"]')
 		for (let el of textNodes){

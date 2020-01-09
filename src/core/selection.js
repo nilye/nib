@@ -1,5 +1,22 @@
-import { findTextProgeny, findUpAttr, genKey, qs } from './util'
-import { findBlk, findMark } from '../model/util'
+import { genKey, qs } from './util'
+import { getValue, findBlk, findMark, reverseMark } from '../model/util'
+
+function findUpAttr (el, attrName, thresholdClass = 'nib-editor') {
+	while (el.parentNode) {
+		el = el.parentNode
+		if (el.hasAttribute(attrName)) return el
+		else if (el.classList.contains(thresholdClass)) break
+	}
+	return null
+}
+
+function findTextProgeny (el) {
+	while (el.firstChild){
+		el = el.firstChild
+		if (el.nodeType == 3) return el
+	}
+	return null
+}
 
 class Selection {
 	constructor (editor, store) {
@@ -103,21 +120,38 @@ class Selection {
 		}
 	}
 
-	reSelect(selection){
-		if (!selection) selection = this.sel
-		if (!this.sel) return
+	select (selection) {
 		let range = document.createRange(),
 			sel = window.getSelection(),
-			startTextNode = qs(`[data-offset="${selection.anchor.key + ':' +selection.anchor.node}"]`),
-			endTextNode = qs(`[data-offset="${selection.focus.key + ':' +selection.focus.node}"]`)
+			storeVal = this.store.getState(),
+			anchorBlkVal = selection.anchor.path ? getValue(storeVal, selection.anchor.path) : findBlk(storeVal, selection.anchor.key).blkVal,
+			focusBlkVal
+		if (selection.anchor.key == selection.focus.key){
+			focusBlkVal = anchorBlkVal
+		} else {
+			focusBlkVal = selection.focus.path ? getValue(storeVal, selection.focus.path) : findBlk(storeVal, selection.focus.key).blkVal
+		}
+		// locate nodeIndex and offset
+		let anchor = reverseMark(anchorBlkVal, selection.anchor.mark),
+			focus = reverseMark(focusBlkVal, selection.focus.mark)
+		// query select elements
+		let startTextNode = qs(`[data-offset="${selection.anchor.key + ':' + anchor.nodeIndex}"]`),
+			endTextNode = qs(`[data-offset="${selection.focus.key + ':' + focus.nodeIndex}"]`)
 		if (!startTextNode || !endTextNode) return
 		startTextNode = findTextProgeny(startTextNode)
 		endTextNode = findTextProgeny(endTextNode)
-		range.setStart(startTextNode, selection.anchor.offset)
-		range.setEnd(endTextNode, selection.focus.offset)
+		console.log(startTextNode, endTextNode)
+		range.setStart(startTextNode, anchor.offset)
+		range.setEnd(endTextNode, focus.offset)
 		sel.removeAllRanges()
 		sel.addRange(range)
 		this.locate()
+	}
+
+	reSelect(selection){
+		if (!selection) selection = this.sel
+		if (!this.sel) return
+		this.select(selection)
 	}
 }
 

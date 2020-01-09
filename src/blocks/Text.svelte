@@ -194,7 +194,6 @@
 				console.log(path)
 				updateStore()
 				if (type != 'p') removePh()
-				selection.reSelect()
 			}
 		}
 	}

@@ -8,7 +8,6 @@ class EventBus {
 		this.sel = {}
 		this.selection.onChange(e=>{
 			this.sel = e
-			console.log(e)
 			if (e.startKey && e.endKey){
 				this.startKey = e.startKey
 				this.endKey = e.endKey

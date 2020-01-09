@@ -30,7 +30,7 @@
 	export let items = []
 	let menuActive = false
 	let menuDiv
-	const {eventBus} = getContext('_')
+	const {eventBus, selection} = getContext('_')
 
 	onMount(()=>{
 		clickOutside(menuDiv, ()=> menuActive = false)
@@ -39,5 +39,6 @@
 	function onClick(data){
 		menuActive = false
 		eventBus.emit(key, 'menu', data)
+		selection.reSelect()
 	}
 </script>
