@@ -2,7 +2,7 @@
 
 const a = [{
 	key: 0,
-	kind: 'blk',
+	kind: 'block',
 	type: 'p',
 	nodes:[]
 },{
@@ -12,42 +12,65 @@ const a = [{
 	nodes:[
 		{
 			key: 2,
-			kind: 'blk',
+			kind: 'block',
 			type: 'p',
 			nodes:[
 				{
 					key: 3,
-					kind: 'blk',
+					kind: 'block',
 					type: 'p',
 					nodes:[
 						{
 							key: 4,
-							kind: 'blk',
+							kind: 'block',
 							type: 'p',
 							nodes:[
-
+								{
+									kind: 'text',
+									text: '4 - 0'
+								},{
+									kind: 'text',
+									text: '4 - 1'
+								},{
+									kind: 'text',
+									text: '4 - 2'
+								}
 							]
 						},{
 							key: 5,
-							kind: 'blk',
+							kind: 'block',
 							type: 'p',
 							nodes:[
-
+								{
+									kind: 'text',
+									text: '5 - 0'
+								},{
+									kind: 'text',
+									text: '5 - 1'
+								}
 							]
 						}
 					]
 				},{
 					key: 6,
-					kind: 'blk',
+					kind: 'block',
 					type: 'p',
 					nodes:[
-
+						{
+							kind: 'text',
+							text: '6 - 0'
+						}
 					]
 				},{
 					key: 7,
-					kind: 'blk',
+					kind: 'block',
 					type: 'p',
-					nodes:[]
+					nodes:[
+						{
+							kind: 'text',
+							text: '7 - 0'
+						}
+					]
 				}
 			]
 		}
@@ -56,7 +79,21 @@ const a = [{
 	key: 8,
 	kind: 'block',
 	type: 'p',
-	nodes:[]
+	nodes:[
+		{
+			kind: 'text',
+			text: '8 - 0',
+			attr:{
+				bold: true
+			}
+		},{
+			kind: 'text',
+			text: '8 - 1',
+			attr:{
+				bold: true
+			}
+		}
+	]
 }]
 
 let indexes = []
@@ -106,7 +143,67 @@ function equal(a, b){
 	return true
 }
 
-let x = {a:{b:1}, c:2, d:4}
-let y = {a:{b:1}, d:4, c:2}
+function activeAttr(obj, sel){
+	let inSel = false, currentBlkKey = '', attr = {},
+		finished = false,
+		consecutiveAttr = {
+			bold: true,
+			italic: true,
+			underline: true,
+			strike: true
+		}
+	function recurse (array){
+		for (let i = 0; i < array.length; i++){
+			let item = array[i]
+			console.log(item)
+			// if a text node
+			if (!item.nodes && item.kind == 'text'){
+				// start inSel
+				if (!inSel && currentBlkKey == sel.anchor.key && i == sel.anchor.node){
+					inSel = true
+				}
+				//
+				if (inSel) {
+					if (item.attr){
+						// filter active attr
+						attr = Object.assign(attr, item.attr)
+						// filter consecutive attr
+						for (let a in consecutiveAttr) {
+							if (!item.attr.hasOwnProperty(a)) {
+								delete consecutiveAttr[a]
+							}
+						}
+					} else {
+						consecutiveAttr = {}
+					}
+				}
+				// end inSel
+				if (currentBlkKey == sel.focus.key && i == sel.focus.node){
+					inSel = false
+					finished = true
+					break;
+				}
+			} else if (item.key && item.kind == 'block'){
+				currentBlkKey = item.key
+				recurse(array[i].nodes)
+				// get rip off unnecessary loop
+				if (finished) return
+			}
+			if (finished) break
+		}
+	}
+	recurse(obj)
+	return {attr, thorough: consecutiveAttr}
+}
 
-console.dir(equal(x, y))
+let sel = {
+	anchor: {
+		key: 4,
+		node: 1
+	},
+	focus: {
+		key: 5,
+		node: 0
+	}
+}
+console.log(activeAttr(a, sel))

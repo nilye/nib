@@ -8,14 +8,14 @@ class Format {
 		this.name = name
 	}
 
-	// modify text attr in Operation data
+	// set or modify text attribute in operator.js
 	setAttr(data, value){
 		let obj = clone(data)
-		if (value) {
+		if (!!value) {
 			if (!obj.attr) obj.attr = {}
 			obj.attr[this.name] = value
-		}
-		else {
+		} else {
+			if (!obj.attr) return obj
 			if (obj.attr.hasOwnProperty(this.name)){
 				delete obj.attr[this.name]
 			}
@@ -37,13 +37,6 @@ class Format {
 		return el
 	}
 
-	// to check if a element contains a child of this Formation
-	isContained(element){
-		let selector = this.tagName
-		if (this.className) selector += '.'+this.className
-		const el = element.querySelector(selector)
-		return Boolean(el)
-	}
 
 }
 

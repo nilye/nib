@@ -54,7 +54,7 @@ class Nib {
 		return this.editor.editorNode
 	}
 
-	data () {
+	getData () {
 		return this.store.getState()
 	}
 }

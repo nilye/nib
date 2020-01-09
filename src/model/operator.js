@@ -14,7 +14,6 @@ export function formatSelection (store, sel, formatter, value) {
 	// same blk
 	if (sel.anchor.key == sel.focus.key){
 		const blkVal = getValue(data, sel.anchor.path)
-		console.log(blkVal)
 		let startMark = sel.anchor.mark,
 			startNode = 0,
 			startAttr = {}
@@ -69,7 +68,6 @@ export function formatSelection (store, sel, formatter, value) {
 				break;
 			}
 		}
-		console.log(blkVal)
 		store.dispatch(updateBlk(sel.anchor.path, blkVal))
 	}
 }

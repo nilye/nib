@@ -36,12 +36,10 @@
 	onDestroy(()=>{
 	})
 
-	/*
-	* UI parts
-	* */
+	/* UI parts */
 
 	/*
-* scaffold the parent element into DOM
+* scaffold - create the parent element into DOM
 * */
 	const nodeOfTypes = {
 		p:{ tag: 'p' },
@@ -73,7 +71,7 @@
 	* @param {String} dataOffset - pass 'pristine' to create zero-width space or '{key}:{offset}'
 	* @param {Object|String} node - node data
 	* */
-	function createSpan(dataOffset, node){
+	function createSpan(dataOffset, node = {}){
 		let span = element('span')
 		attr(span, 'data-nib-text', true)
 		if (dataOffset == 'pristine' || !dataOffset){
@@ -83,10 +81,7 @@
 			attr(span, 'data-offset', dataOffset)
 			if (typeof node == 'string'){
 				span.innerText = node
-			} else if (typeof node == 'object' && !node.attr){
-				// is object, but no attr, treat like normal node
-				span.innerText = node.text
-			} else {
+			} else if (typeof node == 'object'){
 				let el = formatter.render(node)
 				span.append(el)
 			}
@@ -191,16 +186,13 @@
 			if (data['type'] != type){
 				data['type'] = type
 				scaffold()
-				console.log(path)
 				updateStore()
 				if (type != 'p') removePh()
 			}
 		}
 	}
 
-	/*
-	* data
-	* */
+	/*  data */
 	const updateStore = () => store.dispatch(updateBlk(path, data))
 
 	/**

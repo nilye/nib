@@ -7,9 +7,13 @@
 	<link rel="stylesheet" type="text/css" href="dist/main.css">
 </head>
 <body>
+<button onclick="_getData()">data</button>
 <div id="cont" style="margin:auto;margin-top:48px; max-width: 640px"></div>
 <script>
 	let n = new Nib('#cont',{})
+	function _getData(){
+		console.log(n.getData())
+	}
 </script>
 </body>
 </html>

@@ -71,6 +71,7 @@ export function clone(obj){
 	return cloned
 }
 
+// ! deprecated
 /**
  * whether two objects are deeply equal
  * @param {Object} a
@@ -151,21 +152,26 @@ export function findMark(blkVal, nodeIndex, offset) {
  *
  * @param blkVal
  * @param mark
+ * @param {boolean} isAnchor - affects on how to handle mark == len situation
  * @returns {{offset: (*|number), nodeIndex: (*|number)}}
  */
-export function reverseMark(blkVal, mark){
+export function reverseMark(blkVal, mark, isAnchor = true){
 	let nodes = [], nodeIndex, offset
 	if (Array.isArray(blkVal)) nodes = blkVal
 	if (blkVal.nodes && Array.isArray(blkVal.nodes)) nodes = blkVal.nodes
 	for (let i = 0; i < nodes.length; i++){
 		let item = nodes[i], len = item.text.length
-		console.log(mark, len, nodeIndex, offset)
 		if (mark > len){
 			mark -= len
 		}
 		else if (mark == len){
-			nodeIndex = i + 1
-			offset = 0
+			if (isAnchor){
+				nodeIndex = i + 1
+				offset = 0
+			} else {
+				nodeIndex = i
+				offset = mark
+			}
 			break
 		} else {
 			nodeIndex = i
@@ -176,6 +182,7 @@ export function reverseMark(blkVal, mark){
 	return {nodeIndex, offset}
 }
 
+// ! deprecated
 /**
  * find start and end index of character, according to the nodes and offsets.
  * @param {object} blk
@@ -203,6 +210,7 @@ export function charIndex(blk, startNode, anchorOffset, endNode, focusOffset){
 	return [s, e]
 }
 
+// ! deprecated
 /**
  * reverse of charIndex(), find node and offset pair from character indexes
  * @param blk

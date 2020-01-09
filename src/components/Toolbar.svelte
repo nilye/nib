@@ -27,25 +27,28 @@
 	const { selection, store, formatter } = getContext('_')
 	const items = [formatter.toolbar.basic]
 	console.log(items)
-	let toolbarNode, nibContainer, sel, x, y, show
-	let activeAttr = {}
+	let toolbarNode, nibContainer, x, y, show
+	let activeAttr = {},
+			thoroughAttr = {}
 	selection.onChange(e => onSelect(e))
 
 	onMount(() => {
 		nibContainer = toolbarNode.parentNode
 	})
 
-	function onSelect (e) {
-		if (!e.isCollapsed && nibContainer && e.sel) {
-			let range = e.sel.getRangeAt(0),
+	function onSelect (selection) {
+		if (!selection.isCollapsed && nibContainer && selection.sel) {
+			let range = selection.sel.getRangeAt(0),
 					rangeRect = range.getBoundingClientRect(),
 					contRect = nibContainer.getBoundingClientRect()
 			x = rangeRect.x - contRect.x + rangeRect.width / 2
 			y = rangeRect.y - contRect.y - 40
 			show = true
-			if (e.startNode) {
-				activeAttr = formatter.has(e)
-			}
+			// extract active attribute (format)
+			const active = formatter.activeAttr(store.getState(), selection)
+			activeAttr = active.attr
+			thoroughAttr = active.thorough
+			console.log(active)
 		} else {
 			show = false
 		}
@@ -53,8 +56,7 @@
 
 	function onClick (formatName) {
 		let value = true
-		if (activeAttr[formatName] &&
-				formatter.allHas(selection.sel, formatName)){
+		if (activeAttr[formatName] && thoroughAttr[formatName]){
 			value = false
 		}
 		formatSelection(store, selection.sel, formatter.formats[formatName], value)

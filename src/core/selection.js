@@ -132,15 +132,14 @@ class Selection {
 			focusBlkVal = selection.focus.path ? getValue(storeVal, selection.focus.path) : findBlk(storeVal, selection.focus.key).blkVal
 		}
 		// locate nodeIndex and offset
-		let anchor = reverseMark(anchorBlkVal, selection.anchor.mark),
-			focus = reverseMark(focusBlkVal, selection.focus.mark)
+		let anchor = reverseMark(anchorBlkVal, selection.anchor.mark, true),
+			focus = reverseMark(focusBlkVal, selection.focus.mark, false)
 		// query select elements
 		let startTextNode = qs(`[data-offset="${selection.anchor.key + ':' + anchor.nodeIndex}"]`),
 			endTextNode = qs(`[data-offset="${selection.focus.key + ':' + focus.nodeIndex}"]`)
 		if (!startTextNode || !endTextNode) return
 		startTextNode = findTextProgeny(startTextNode)
 		endTextNode = findTextProgeny(endTextNode)
-		console.log(startTextNode, endTextNode)
 		range.setStart(startTextNode, anchor.offset)
 		range.setEnd(endTextNode, focus.offset)
 		sel.removeAllRanges()
