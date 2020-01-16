@@ -2,44 +2,58 @@
 /**
  * set the value in a nested obj
  * @param obj
- * @param {Array|String|Number} keys - an array of access key/index for nested value
+ * @param {Array|String|Number} path - an array of access key/index for nested value
  * @param {Object} value
  * @param {boolean} skipNodes
  * */
-export function setValue(obj, keys, value, skipNodes = true){
-	if (typeof keys == 'string') keys = keys.split('.')
-	if (typeof keys == 'number') keys = [keys]
-	if (keys.length > 1){
-		let k = keys.shift()
-/*		if (!obj.hasOwnProperty(k) || typeof obj[k] !== 'object'){
-			throw TypeError ('Out of layer:'+ obj)
-		}*/
-		setValue((skipNodes && obj[k].nodes) ? obj[k].nodes : obj[k], keys, value)
+export function setValue(obj, path, value, skipNodes = true){
+	if (typeof path == 'string') path = path.split('.')
+	if (typeof path == 'number') path = [path]
+	if (path.length > 1){
+		let k = path.shift()
+		setValue((skipNodes && obj[k].nodes) ? obj[k].nodes : obj[k], path, value)
 	} else {
-		obj[keys[0]] = value
+		obj[path[0]] = value
 	}
 }
 
 /**
  * get the value in a nested obj
  * @param obj
- * @param {Array|String|Number} keys
+ * @param {Array|String|Number} path
  * @param {boolean} skipNodes
  * @returns {Object}
  */
-export function getValue(obj, keys, skipNodes = true){
-	if (typeof keys == 'string') keys = keys.split('.')
-	if (typeof keys == 'number') keys = [keys]
-	if (keys.length > 1){
-		return keys.reduce((child, k)=>{
+export function getValue(obj, path, skipNodes = true){
+	if (typeof path == 'string') path = path.split('.')
+	if (typeof path == 'number') path = [path]
+	if (path.length == 0) return obj
+	if (path.length > 1){
+		return path.reduce((child, k)=>{
 			if (child && child.hasOwnProperty(k)){
 				return ( skipNodes && child[k].nodes) ? child[k].nodes : child[k]
 			}
 			return child
 		}, obj)
 	} else {
-		return obj[keys[0]]
+		return obj[path[0]]
 	}
+}
+
+/**
+ * delete the value in a nested obj
+ * @param obj
+ * @param {Array} path
+ */
+export function deleteValue(obj, path){
+	if (typeof path == 'string') path = path.split('.')
+	if (typeof path == 'number') path = [path]
+	while (path.length > 1){
+		obj = obj[path[0]].nodes
+		if (!obj) return
+		path.shift()
+	}
+	obj.splice(path[0], 1)
 }
 
 /**
@@ -71,7 +85,6 @@ export function clone(obj){
 	return cloned
 }
 
-// ! deprecated
 /**
  * whether two objects are deeply equal
  * @param {Object} a
@@ -113,7 +126,7 @@ export function findBlk(obj, key){
 			if (array[i].key == key){
 				blkPath.unshift(i)
 				return array[i]
-			} else {
+			} else if (array[i].nodes){
 				let blkVal = recurse(array[i].nodes, key)
 				if (blkVal) {
 					blkPath.unshift(i)
@@ -149,7 +162,7 @@ export function findMark(blkVal, nodeIndex, offset) {
 }
 
 /**
- *
+ * reverse of findMark()
  * @param blkVal
  * @param mark
  * @param {boolean} isAnchor - affects on how to handle mark == len situation
@@ -170,17 +183,113 @@ export function reverseMark(blkVal, mark, isAnchor = true){
 				offset = 0
 			} else {
 				nodeIndex = i
-				offset = mark
+				offset = len
 			}
 			break
 		} else {
 			nodeIndex = i
-			offset = len - mark
+			offset = mark
 			break
 		}
 	}
 	return {nodeIndex, offset}
 }
+
+/**
+ *
+ * @param blkVal
+ * @param anchorMark
+ * @param focusMark
+ * @param value
+ * @returns {*}
+ */
+export function replaceTextRange(blkVal, anchorMark, focusMark = -1, value = ''){
+	let nodes = blkVal.nodes
+	let anchor = reverseMark(blkVal, anchorMark, true),
+		focus = reverseMark(blkVal, focusMark)
+	console.log(anchor, focus)
+	if (!nodes[anchor.nodeIndex]) return
+	nodes[anchor.nodeIndex].text = nodes[anchor.nodeIndex].text.slice(0, anchor.offset)
+	nodes[anchor.nodeIndex].text += value
+	console.log(nodes)
+	for (let i = anchor.nodeIndex; i < nodes.length; i++){
+		if (i == focus.nodeIndex && focusMark >= 0){
+			nodes[i].text = nodes[i].text.slice(focus.offset)
+			break
+		} else if (i != anchor.nodeIndex) {
+			nodes.splice(i, 1)
+		}
+	}
+	return blkVal
+}
+
+export function liftPath(path){
+
+}
+
+/**
+ * tidy block value -
+ * 1. merge nodes with same attribute
+ * 2. get rid of empty data
+ * @param blkVal
+ */
+export function tidyBlk(blkVal){
+	if (!blkVal.nodes) return blkVal
+	let lastItem = {attr: '_'}, lastIndex = 0
+	for (let i = 0; i < blkVal.nodes.length; i++){
+		let item = blkVal.nodes[i]
+		if (!item.text || item.text.length == 0){
+			item['remove'] = true
+		}
+		if (equal(item.attr, lastItem.attr)){
+			lastItem.text += item.text
+			blkVal.nodes[lastIndex] = lastItem
+			item['remove'] = true
+		} else {
+			lastItem = item
+			lastIndex = i
+		}
+	}
+	// if doing splice while looping, the items are shifted therefore, it ends up skipping the iteration
+	blkVal.nodes = blkVal.nodes.filter(item => !item.remove)
+	return blkVal
+}
+
+/**
+ * flatten store value and return arrays of blk path and blk key
+ * @param obj
+ * @returns {{paths: Array, keys: Array}}
+ */
+export function flatten(obj){
+	let paths = [], keys = []
+	function recurse(obj, prefix = ''){
+		for (let i = 0; i < obj.length; i++){
+			const key = prefix + i, v = obj[i]
+			keys.push(v.key)
+			if (v.nodes && v.nodes.length > 0 && v.nodes[0].kind == 'block'){
+				recurse(v.nodes, `${key}.`)
+			} else {
+				paths.push(key)
+			}
+		}
+	}
+	recurse(obj)
+	return {paths, keys}
+}
+
+export function blkTextContent(obj){
+	let text = '', nodes = obj.nodes
+	for (let i of nodes){
+		text += i.text
+	}
+	return text
+}
+
+
+
+
+
+
 
 // ! deprecated
 /**

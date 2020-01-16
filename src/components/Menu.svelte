@@ -13,7 +13,7 @@
 		{/each}
 		<div class="nib-menu-divider"></div>
 		<div class="nib-menu-tile"
-		     on:click="{()=> menuActive = false}">
+		     on:click="{onDelete}">
 			{@html trash}
 			<div>Delete</div>
 		</div>
@@ -25,12 +25,15 @@
 	import trash from '../assets/icon/trash.svg'
 	import { onMount, getContext } from 'svelte'
 	import { clickOutside } from '../core/util'
+	import { removeBlk } from '../model/action'
+	import { findBlk } from '../model/util'
 
 	export let key = ''
+	export let path = []
 	export let items = []
 	let menuActive = false
 	let menuDiv
-	const {eventBus, selection} = getContext('_')
+	const {eventBus, selection, store} = getContext('_')
 
 	onMount(()=>{
 		clickOutside(menuDiv, ()=> menuActive = false)
@@ -40,5 +43,9 @@
 		menuActive = false
 		eventBus.emit(key, 'menu', data)
 		selection.reSelect()
+	}
+
+	function onDelete(){
+		store.dispatch(removeBlk(path))
 	}
 </script>

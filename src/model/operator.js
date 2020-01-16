@@ -1,13 +1,13 @@
+import { getValue, clone, tidyBlk, flatten } from './util'
+import { insertBlk, removeBlk, updateBlk } from './action'
+
 /**
- *
+ * format selected data range with desire formatter and value
  * @param store
  * @param sel
  * @param formatter
  * @param value
  */
-import { getValue, clone } from './util'
-import { updateBlk } from './action'
-
 export function formatSelection (store, sel, formatter, value) {
 	let data = clone(store.getState())
 
@@ -68,6 +68,20 @@ export function formatSelection (store, sel, formatter, value) {
 				break;
 			}
 		}
+		tidyBlk(blkVal)
 		store.dispatch(updateBlk(sel.anchor.path, blkVal))
 	}
+}
+
+
+export function upperMerge(store, sel){
+	const data = store.getState()
+	if (!sel.prev) return
+	const blkVal = getValue(data, sel.anchor.path),
+		preBlkVal = getValue(data, sel.prev.path)
+	console.log(sel)
+	preBlkVal.nodes = preBlkVal.nodes.concat(blkVal.nodes)
+	tidyBlk(preBlkVal)
+	store.dispatch(updateBlk(sel.prev.path, preBlkVal))
+	store.dispatch(removeBlk(sel.anchor.path))
 }

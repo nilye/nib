@@ -28,8 +28,8 @@ class Nib {
 			])]
 		this.store = createStore(reducer, this.initData)
 		this.selection = new Selection(this.target, this.store)
+		this.eventBus = new EventBus(this.selection, this.store)
 		this.formatter = new Formatter()
-		this.eventBus = new EventBus(this.selection)
 		this.config = {}
 		Object.assign(this.config, defaultConfig, config)
 		this.createEditor()

@@ -1,5 +1,4 @@
 
-
 const a = [{
 	key: 0,
 	kind: 'block',
@@ -98,12 +97,13 @@ const a = [{
 
 let indexes = []
 function findKey(array, key){
+	console.log(array)
 	for (let i = 0; i < array.length; i++){
 		console.log(array[i], '\n', i)
 		if (array[i].key == key){
 			indexes.unshift(i)
 			return array[i]
-		} else {
+		} else if (array[i].nodes) {
 			let blk = findKey(array[i].nodes, key)
 			if (blk) {
 				indexes.unshift(i)
@@ -206,4 +206,82 @@ let sel = {
 		node: 0
 	}
 }
-console.log(activeAttr(a, sel))
+// console.log(findKey(a, '7'), indexes)
+
+function flatten(obj, prefix = '', res = []){
+	return Object.entries(obj).reduce((accum, [k,v])=>{
+		const key = prefix + k
+		if (v.nodes && v.nodes.length > 0 && v.nodes[0].kind == 'block'){
+			flatten(v.nodes, `${key}.`, accum)
+		} else {
+			res.push(key)
+		}
+		return accum
+	}, res)
+}
+
+function flattenPath(obj){
+	let paths = [], keys = []
+	function recurse(obj, prefix = ''){
+		for (let i = 0; i < obj.length; i++){
+			const key = prefix + i, v = obj[i]
+			keys.push(v.key)
+			if (v.nodes && v.nodes.length > 0 && v.nodes[0].kind == 'block'){
+				recurse(v.nodes, `${key}.`)
+			} else {
+				paths.push(key)
+			}
+		}
+	}
+	recurse(obj)
+	return {paths, keys}
+}
+
+function reverseMark(blkVal, mark, isAnchor = true){
+	let nodes = [], nodeIndex, offset
+	if (Array.isArray(blkVal)) nodes = blkVal
+	if (blkVal.nodes && Array.isArray(blkVal.nodes)) nodes = blkVal.nodes
+	for (let i = 0; i < nodes.length; i++){
+		let item = nodes[i], len = item.text.length
+		if (mark > len){
+			mark -= len
+		}
+		else if (mark == len){
+			if (isAnchor){
+				nodeIndex = i + 1
+				offset = 0
+			} else {
+				nodeIndex = i
+				offset = len
+			}
+			break
+		} else {
+			nodeIndex = i
+			offset = mark
+			break
+		}
+	}
+	return {nodeIndex, offset}
+}
+
+function replaceTextRange(blkVal, anchorMark, focusMark = -1, value = ''){
+	let nodes = blkVal.nodes
+	let anchor = reverseMark(blkVal, anchorMark, true),
+		focus = reverseMark(blkVal, focusMark)
+	console.log(anchor, focus)
+	if (!nodes[anchor.nodeIndex]) return
+	nodes[anchor.nodeIndex].text = nodes[anchor.nodeIndex].text.slice(0, anchor.offset)
+	nodes[anchor.nodeIndex].text += value
+	console.log(nodes)
+	for (let i = anchor.nodeIndex; i < nodes.length; i++){
+		if (i == focus.nodeIndex && focusMark >= 0){
+			nodes[i].text = nodes[i].text.slice(focus.offset)
+			break
+		} else if (i != anchor.nodeIndex) {
+			nodes.splice(i, 1)
+		}
+	}
+	return blkVal
+}
+
+console.log(replaceTextRange(a[2], 2, 8))

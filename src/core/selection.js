@@ -1,5 +1,5 @@
 import { genKey, qs } from './util'
-import { getValue, findBlk, findMark, reverseMark } from '../model/util'
+import { getValue, findBlk, findMark, reverseMark, flatten } from '../model/util'
 
 function findUpAttr (el, attrName, thresholdClass = 'nib-editor') {
 	while (el.parentNode) {
@@ -56,7 +56,7 @@ class Selection {
 	locate () {
 		let sel = window.getSelection(),
 			storeVal = this.store.getState()
-		const isActive = this.editor.contains(document.activeElement) || this.editor == document.activeElement
+		const isActive = this.editor.contains(sel.anchorNode) || this.editor == document.activeElement
 		if ( isActive && sel.anchorNode && (sel.anchorNode.nodeType == 3 || sel.anchorNode.nodeName == 'INPUT')) {
 			let selection = {}
 			// direction
@@ -76,15 +76,15 @@ class Selection {
 				startBlk = findUpAttr(anchorNode, 'data-nib-blk'),
 				endNode = findUpAttr(focusNode, 'data-nib-text'),
 				endBlk = findUpAttr(focusNode, 'data-nib-blk')
-			let anchorNodeIndex = parseInt(startNode.getAttribute('data-offset').split(':')[1]),
+			let anchorNodeIndex = startNode.getAttribute('data-offset') ? parseInt(startNode.getAttribute('data-offset').split(':')[1]) : 0,
 				anchorKey = startBlk.getAttribute('data-key'),
 				anchorBlk = findBlk(storeVal, anchorKey)
 			//
-			let focusNodeIndex = parseInt(endNode.getAttribute('data-offset').split(':')[1]),
+			let focusNodeIndex = startNode.getAttribute('data-offset') ? parseInt(endNode.getAttribute('data-offset').split(':')[1]) : 0,
 				focusKey = endBlk.getAttribute('data-key'),
 				focusBlk = findBlk(storeVal, focusKey)
 			/*
-			* assign selection var
+			* get anchor and focus
 			* -- Terminology --
 				 anchor: starting point
 				 focus: ending point
@@ -108,49 +108,68 @@ class Selection {
 				offset: focusOffset,
 				mark: findMark(focusBlk.blkVal, focusNodeIndex, focusOffset)
 			}
+			// get in between
+			let flatted = flatten(storeVal)
+			let fkAnchor = flatted.keys.indexOf(anchorKey),
+				fkFocus = flatted.keys.indexOf(focusKey),
+				fpAnchor = flatted.paths.indexOf(anchorBlk.blkPath.join('.')),
+				fpFocus = flatted.paths.indexOf(focusBlk.blkPath.join('.'))
+			selection.between = {
+				keys: flatted.keys.slice(fkAnchor, fkFocus+1),
+				paths: flatted.paths.slice(fpAnchor, fpFocus+1).join('.')
+			}
+			// previous or next blk
+			if (flatted.paths[fkAnchor - 1]){
+				selection.prev = {
+					path: flatted.paths[fkAnchor - 1].split('.').map(n=>parseInt(n)),
+					key: flatted.keys[fkAnchor - 1]
+				}
+			}
 			selection.isCollapsed = sel.isCollapsed
 			selection.blurKey =  this.sel.anchor.key == selection.anchor.key ? null : (this.sel.anchor.key || null)
+			selection.focused = true
 			this.sel = {...selection, sel}
-			console.log(this.sel)
 			this.dispatch(this.sel)
 		} else {
 			this.dispatch({
+				focused: false,
 				blurKey: this.sel.anchor.key
 			})
 		}
 	}
 
-	select (selection) {
+	select (sel) {
 		let range = document.createRange(),
-			sel = window.getSelection(),
+			windowSel = window.getSelection(),
 			storeVal = this.store.getState(),
-			anchorBlkVal = selection.anchor.path ? getValue(storeVal, selection.anchor.path) : findBlk(storeVal, selection.anchor.key).blkVal,
+			anchorBlkVal = sel.anchor.path ? getValue(storeVal, sel.anchor.path) : findBlk(storeVal, sel.anchor.key).blkVal,
 			focusBlkVal
-		if (selection.anchor.key == selection.focus.key){
+		if (!sel.focus) sel.focus = sel.anchor
+		if (sel.anchor.key == sel.focus.key){
 			focusBlkVal = anchorBlkVal
 		} else {
-			focusBlkVal = selection.focus.path ? getValue(storeVal, selection.focus.path) : findBlk(storeVal, selection.focus.key).blkVal
+			focusBlkVal = sel.focus.path ? getValue(storeVal, sel.focus.path) : findBlk(storeVal, sel.focus.key).blkVal
 		}
 		// locate nodeIndex and offset
-		let anchor = reverseMark(anchorBlkVal, selection.anchor.mark, true),
-			focus = reverseMark(focusBlkVal, selection.focus.mark, false)
+		let anchor = reverseMark(anchorBlkVal, sel.anchor.mark, true),
+			focus = reverseMark(focusBlkVal, sel.focus.mark, false)
 		// query select elements
-		let startTextNode = qs(`[data-offset="${selection.anchor.key + ':' + anchor.nodeIndex}"]`),
-			endTextNode = qs(`[data-offset="${selection.focus.key + ':' + focus.nodeIndex}"]`)
+		let startTextNode = qs(`[data-offset="${sel.anchor.key + ':' + anchor.nodeIndex}"]`),
+			endTextNode = qs(`[data-offset="${sel.focus.key + ':' + focus.nodeIndex}"]`)
 		if (!startTextNode || !endTextNode) return
 		startTextNode = findTextProgeny(startTextNode)
 		endTextNode = findTextProgeny(endTextNode)
 		range.setStart(startTextNode, anchor.offset)
 		range.setEnd(endTextNode, focus.offset)
-		sel.removeAllRanges()
-		sel.addRange(range)
+		windowSel.removeAllRanges()
+		windowSel.addRange(range)
 		this.locate()
 	}
 
-	reSelect(selection){
-		if (!selection) selection = this.sel
+	reSelect(sel){
+		if (!sel) sel = this.sel
 		if (!this.sel) return
-		this.select(selection)
+		this.select(sel)
 	}
 }
 

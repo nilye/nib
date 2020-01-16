@@ -48,7 +48,6 @@
 			const active = formatter.activeAttr(store.getState(), selection)
 			activeAttr = active.attr
 			thoroughAttr = active.thorough
-			console.log(active)
 		} else {
 			show = false
 		}

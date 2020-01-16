@@ -56,6 +56,7 @@ export function clickOutside (target, callback) {
 export const emit = (target, event, data) => target.dispatchEvent(new CustomEvent(event, { detail: data }))
 
 // text
+// text content of a DOM element
 export const textContent = (el) => {
 	let text = ''
 	if (el.childNodes){

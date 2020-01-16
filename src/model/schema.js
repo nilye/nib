@@ -1,12 +1,13 @@
 import { genKey } from '../core/util'
 
 function block(a = {}){
-	return Object.assign({
-			key: genKey(),
-			kind: 'block',
-			type: a['type'] || 'p',
-			nodes: a['nodes'] || []
-		}, a)
+	let obj = {
+		key: genKey(),
+		kind: 'block',
+		type: a['type'] || 'p',
+	}
+	if (a.nodes) obj.nodes = a.nodes
+	return Object.assign(obj, a)
 }
 
 const schema = {
@@ -17,7 +18,7 @@ const schema = {
 		},
 		a.attr && { attr: a.attr })
 	},
-	paragraph(nodes){
+	paragraph(nodes = []){
 		return block({nodes, type:'p'})
 	}
 }

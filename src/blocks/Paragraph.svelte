@@ -7,6 +7,7 @@
 	import schema from '../model/schema'
 	import { updateBlk } from '../model/action'
 	import { getStoreValue } from '../model/util'
+	import { upperMerge } from '../model/operator'
 
 	export let key = ''
 	export let path = [-1]
@@ -22,6 +23,7 @@
 	store.subscribe(()=>{
 		let oldVal = data,
 				newVal = getStoreValue(store, path)
+		if (!newVal) return
 		if (oldVal !== newVal){
 			data = newVal
 			if (oldVal.type != newVal.type) scaffold()
@@ -121,7 +123,7 @@
 		}
 		// if there is extra old span, remove them
 		if (nodes.length > data.nodes.length){
-			for (let j=nodes.length; j<data.nodes.length; j++){
+			for (let j = data.nodes.length; j < nodes.length; j++){
 				cttNode.removeChild(nodes[j])
 			}
 		}
@@ -170,6 +172,7 @@
 				}
 			}
 			serializeData()
+
 		},
 		input (e) {
 			if (isEmpty && e.data) {

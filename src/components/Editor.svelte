@@ -17,7 +17,8 @@
 			<div class="nib-prime-ctrl" contenteditable="false">
 				<div class="nib-prime-handle"></div>
 				<Menu
-						key={ prime.key }
+						key={prime.key}
+						path={[index]}
 						items={manifesto[prime.type].menu}></Menu>
 			</div>
 			<svelte:component
@@ -62,51 +63,5 @@
 		eventBus.bindEditor(editorNode)
 		// selection.onChange(e => onSelectChange(e))
 	})
-
-	/*
-	* binding events
-	* */
-/*	function onSelectChange (e) {
-		sel = e
-		console.log(e, primes)
-		activePrime = primes[e.startPrimeKey]
-		endPrime = primes[e.endPrimeKey]
-		let inactivePrime = primes[e.lastPrimeKey]
-		if (e.focused && activePrime) {
-			if (activePrime.onSelect) activePrime.onSelect(e)
-			if (activePrime.onFocus) activePrime.onFocus(e)
-			if (inactivePrime && inactivePrime.onBlur) inactivePrime.onBlur(e)
-		} else if (inactivePrime) {
-			if (inactivePrime.onBlur) inactivePrime.onBlur(e)
-		}
-	}
-
-	// editor
-	function onCompositionStart () {
-		inputIsComposing = true
-	}
-
-	function onCompositionEnd (e) {
-		inputIsComposing = false
-		onInput(e)
-	}
-
-	function bindEvents(type, e){
-		if (activePrime){
-			if (typeof activePrime[type] === 'function') activePrime[type](e)
-			if (!sel.samePrime && typeof endPrime[type] === 'function') endPrime[type](e)
-		}
-	}
-	function onInput (e) {
-		if (!inputIsComposing){
-			bindEvents('onInput', e)
-		}
-	}
-	function onKeyup (e) {
-		bindEvents('onKeyup', e)
-	}
-	function onKeydown (e) {
-		bindEvents('onKeydown', e)
-	}*/
 
 </script>

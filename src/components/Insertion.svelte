@@ -8,17 +8,14 @@
 <script>
 	import plus from '../assets/icon/plus.svg'
 	import schema from '../model/schema'
+	import { getContext } from 'svelte'
+	import { insertBlk } from '../model/action'
 
 	export let index = -1
 	export let first = false
+
+	const { store } = getContext('_')
 	function insert () {
-		// Content.update(v => {
-		// 	if (first){
-		// 		v.unshift(schema.block())
-		// 	} else {
-		// 		v.splice(index+1, 0, schema.block())
-		// 	}
-		// 	return v
-		// })
+		store.dispatch(insertBlk(first ? 0 : index+1, schema.paragraph()))
 	}
 </script>
