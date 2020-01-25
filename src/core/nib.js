@@ -1,7 +1,7 @@
 import Editor from '../components/Editor.svelte'
 import { addClass } from './util'
 import defaultConfig from './config'
-import schema from '../model/schema'
+import Schema from '../model/schema'
 import Selection from './selection'
 import Formatter from './formatter'
 import { createStore } from 'redux'
@@ -23,15 +23,15 @@ class Nib {
 		if (initData && !Array.isArray(this.initData)) {
 			throw TypeError('initData has to be an array:' + this.initData)
 		}
-		this.initData = initData || [schema.paragraph([
-			schema.text({text:"Filmmakers would generally prefer that their films, when shown in theaters (i.e. when the visual spectacle is supposed to be at its best), don't have subtitles, to maximize the aesthetic presentation of the film. ... And even when they do that, the act of reading by itself is distracting from other elements on the screen."})
-			])]
+		// this.initData = initData
+		this.initData = [Schema.paragraph([
+			Schema.text({text:"Filmmakers would generally prefer that their films, when shown in theaters (i.e. when the visual spectacle is supposed to be at its best), don't have subtitles, to maximize the aesthetic presentation of the film. ... And even when they do that, the act of reading by itself is distracting from other elements on the screen."})
+		])]
 		this.store = createStore(reducer, this.initData)
 		this.selection = new Selection(this.target, this.store)
 		this.eventBus = new EventBus(this.selection, this.store)
 		this.formatter = new Formatter()
-		this.config = {}
-		Object.assign(this.config, defaultConfig, config)
+		this.config = Object.assign(defaultConfig, config)
 		this.createEditor()
 	}
 

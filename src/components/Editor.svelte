@@ -16,13 +16,14 @@
 			<Insertion index={index}></Insertion>
 			<div class="nib-prime-ctrl" contenteditable="false">
 				<div class="nib-prime-handle"></div>
-				<Menu
-						key={prime.key}
-						path={[index]}
-						items={manifesto[prime.type].menu}></Menu>
+				<Menu key={prime.key}
+				      path={[index]}
+				      items={manifesto[prime.type].menu}>
+				</Menu>
 			</div>
 			<svelte:component
 					this={manifesto[prime.type].component}
+					data={prime}
 					key={prime.key}
 					path={[index]}
 					isPrime={true}>

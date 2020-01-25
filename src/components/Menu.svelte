@@ -26,7 +26,6 @@
 	import { onMount, getContext } from 'svelte'
 	import { clickOutside } from '../core/util'
 	import { removeBlk } from '../model/action'
-	import { findBlk } from '../model/util'
 
 	export let key = ''
 	export let path = []

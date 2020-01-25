@@ -1,4 +1,5 @@
-import { clone, setValue, getValue, deleteValue } from './util'
+import { clone} from './util'
+import Blk from './blk'
 
 export function reducer (state, action) {
 	if (methods.hasOwnProperty(action.type)){
@@ -11,20 +12,19 @@ const methods = {
 	UPDATE_BLK: (state, payload) => {
 		const {path, value} = payload
 		let data = clone(state)
-		setValue(data, path, value)
+		Blk.set(data, path, value)
 		return data
 	},
 	INSERT_BLK: (state, payload) => {
 		const {index, value, blkPath} = payload
 		let data = clone(state)
-		let blk = getValue(data, blkPath)
-		blk.splice(index, 0, value)
+		Blk.insert(data, blkPath, index, value)
 		return data
 	},
 	REMOVE_BLK: (state, payload) => {
 		const {path} = payload
 		let data = clone(state)
-		deleteValue(data, path)
+		Blk.remove(data, path)
 		return data
 	}
 }

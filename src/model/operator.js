@@ -1,75 +1,65 @@
-import { getValue, clone, tidyBlk, flatten } from './util'
-import { insertBlk, removeBlk, updateBlk } from './action'
+import { clone, flatten } from './util'
+import { removeBlk, updateBlk } from './action'
+import Blk from './blk'
+import Transform from './transform'
 
 /**
- * format selected data range with desire formatter and value
+ * format data in selected range with passed formatter and value
  * @param store
  * @param sel
  * @param formatter
- * @param value
+ * @param formatVal
  */
-export function formatSelection (store, sel, formatter, value) {
-	let data = clone(store.getState())
+export function formatSelection(store, sel, formatter, formatVal){
+	let data = store.getState(),
+		startBlk, endBlk
 
-	// same blk
+	// format node fn
+	function formatNode(blkVal, anchor, focus){
+		let isStart = anchor ? true : focus && anchor,
+			split = Transform.splitNodes(blkVal,
+				isStart ? anchor.mark : focus.mark,
+				isStart && focus ? focus.mark : undefined)
+		if (isStart){
+			split.body = split.body.map(i => formatter.setAttr(i, formatVal))
+		} else {
+			split.head = split.head.map(i => formatter.setAttr(i, formatVal))
+		}
+		blkVal.nodes = [...split.head, ...split.body, ...split.tail]
+		Blk.tidy(blkVal)
+	}
+
+	// selection range is all in one blk
 	if (sel.anchor.key == sel.focus.key){
-		const blkVal = getValue(data, sel.anchor.path)
-		let startMark = sel.anchor.mark,
-			startNode = 0,
-			startAttr = {}
-		// split starting node
-		for (let i = 0; i < blkVal.nodes.length; i++){
-			let item = blkVal.nodes[i],
-				len = item.text.length
-			if (startMark > len - 1) startMark -= len // pass node
-			else {
-				// split node
-				let nodes = [clone(item)]
-				startAttr = nodes[0].attr
-				// no split
-				if (startMark == 0){
-					nodes[0] = formatter.setAttr(nodes[0], value)
-					startNode = i
-				} else {
-					// split node
-					nodes[0].text = item.text.slice(0, startMark)
-					nodes.push(clone(item))
-					nodes[1].text = item.text.slice(startMark)
-					nodes[1] = formatter.setAttr(nodes[1], value)
-					startNode = i + 1
-				}
-				blkVal.nodes.splice(i, 1, ...nodes)
-				break;
-			}
+		startBlk = Blk.get(data, sel.anchor.path)
+		formatNode(startBlk, sel.anchor, sel.focus)
+	}
+	// selection range covers multiple blk
+	else {
+		startBlk = Blk.get(data, sel.anchor.path)
+		endBlk = Blk.get(data, sel.focus.path)
+		formatNode(startBlk, sel.anchor, null)
+		formatNode(endBlk, null, sel.focus)
+
+		// blks in-between
+		let flatted = flatten(data),
+			startPathIndex = flatted.paths.indexOf(sel.anchor.path.join('.')),
+			endPathIndex = flatted.paths.indexOf(sel.focus.path.join('.'))
+		let	pathInBetween = flatted.paths.slice(startPathIndex+1, endPathIndex)
+		// loop between
+		for (let i of pathInBetween){
+			let path = i.split('.').map(Number),
+				blkVal = Blk.get(data, path)
+			blkVal.nodes = blkVal.nodes.map(i => formatter.setAttr(i, formatVal))
+			Blk.tidy(blkVal)
+			// update store
+			store.dispatch(updateBlk(path, blkVal))
 		}
-		// split ending node
-		let endMark = sel.focus.mark - sel.anchor.mark
-		for (let j = startNode; j < blkVal.nodes.length; j++){
-			let item = blkVal.nodes[j],
-				len = item.text.length
-			if (endMark > len) {
-				blkVal.nodes[j] = formatter.setAttr(item, value)
-				endMark -= len
-			}
-			else {
-				// split node
-				let nodes = [clone(item)]
-				nodes[0].text = item.text.slice(0, endMark)
-				nodes[0] = formatter.setAttr(nodes[0], value)
-				if (endMark < len - 1){
-					nodes.push(clone(item))
-					nodes[1].text = item.text.slice(endMark)
-					// recover attr if ending node is also the starting node
-					if (j == startNode){
-						startAttr ? nodes[1].attr = startAttr : delete nodes[1].attr
-					}
-				}
-				blkVal.nodes.splice(j, 1, ...nodes)
-				break;
-			}
-		}
-		tidyBlk(blkVal)
-		store.dispatch(updateBlk(sel.anchor.path, blkVal))
+	}
+	// update store
+	store.dispatch(updateBlk(sel.anchor.path, startBlk))
+	if (endBlk){
+		store.dispatch(updateBlk(sel.focus.path, endBlk))
 	}
 }
 
@@ -77,11 +67,10 @@ export function formatSelection (store, sel, formatter, value) {
 export function upperMerge(store, sel){
 	const data = store.getState()
 	if (!sel.prev) return
-	const blkVal = getValue(data, sel.anchor.path),
-		preBlkVal = getValue(data, sel.prev.path)
-	console.log(sel)
+	const blkVal = Blk.get(data, sel.anchor.path),
+		preBlkVal = Blk.get(data, sel.prev.path)
 	preBlkVal.nodes = preBlkVal.nodes.concat(blkVal.nodes)
-	tidyBlk(preBlkVal)
+	Blk.tidy(preBlkVal)
 	store.dispatch(updateBlk(sel.prev.path, preBlkVal))
 	store.dispatch(removeBlk(sel.anchor.path))
 }

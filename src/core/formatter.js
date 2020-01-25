@@ -3,7 +3,7 @@ import Italic from '../format/italic'
 import Underline from '../format/underline'
 import Strike from '../format/strike'
 import { element } from './util'
-import { clone } from '../model/util'
+import Schema from '../model/schema'
 
 class Formatter {
 	constructor (_default = true){
@@ -19,10 +19,6 @@ class Formatter {
 		Object.keys(this.formats).forEach(a=>{
 			this.formatsList[a] = true
 		})
-	}
-
-	register (formats) {
-		Object.assign(this.formats, formats)
 	}
 
 	/**
@@ -52,7 +48,8 @@ class Formatter {
 	 * @returns {{thorough: {}, attr}}
 	 */
 	activeAttr(obj, sel){
-		let inSel = false, currentBlkKey = '', attr = {},
+		let inSel = false, // to mark if enter selected range
+			currentBlkKey = '', attr = {},
 			finished = false,
 			consecutiveAttr = {
 				bold: true,
@@ -64,15 +61,15 @@ class Formatter {
 			for (let i = 0; i < array.length; i++){
 				let item = array[i]
 				// if a text node
-				if (!item.nodes && item.kind == 'text'){
+				if (Schema.isText(item)){
 					// start inSel
 					if (!inSel && currentBlkKey == sel.anchor.key && i == sel.anchor.node){
 						inSel = true
 					}
 					//
 					if (inSel) {
+						// filter active attr
 						if (item.attr){
-							// filter active attr
 							attr = Object.assign(attr, item.attr)
 							// filter consecutive attr
 							for (let a in consecutiveAttr) {
@@ -81,6 +78,7 @@ class Formatter {
 								}
 							}
 						} else {
+							// otherwise there is no consecutiveAttr
 							consecutiveAttr = {}
 						}
 					}
@@ -90,7 +88,9 @@ class Formatter {
 						finished = true
 						break;
 					}
-				} else if (item.key && item.kind == 'block'){
+				}
+				// if a block node
+				else if (Schema.isBlock(item)){
 					currentBlkKey = item.key
 					recurse(array[i].nodes)
 					// get rip off unnecessary loop

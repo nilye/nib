@@ -20,13 +20,12 @@
 </div>
 
 <script>
-	import { onMount, getContext } from 'svelte'
+	import { onMount, getContext, tick } from 'svelte'
 	import cleanIcon from '../assets/icon/clean-format.svg'
 	import { formatSelection } from '../model/operator'
 
 	const { selection, store, formatter } = getContext('_')
 	const items = [formatter.toolbar.basic]
-	console.log(items)
 	let toolbarNode, nibContainer, x, y, show
 	let activeAttr = {},
 			thoroughAttr = {}
@@ -42,7 +41,7 @@
 					rangeRect = range.getBoundingClientRect(),
 					contRect = nibContainer.getBoundingClientRect()
 			x = rangeRect.x - contRect.x + rangeRect.width / 2
-			y = rangeRect.y - contRect.y - 40
+			y = rangeRect.y - contRect.y - 44
 			show = true
 			// extract active attribute (format)
 			const active = formatter.activeAttr(store.getState(), selection)

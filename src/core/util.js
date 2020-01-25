@@ -2,7 +2,7 @@
 const keyPool = {}
 
 export function genKey() {
-	const gen = () => Math.random().toString(16).substr(2, 12)
+	const gen = () => Math.random().toString(32).substr(2, 8)
 	let key = gen()
 	while (keyPool.hasOwnProperty(key)) {
 		key = gen()

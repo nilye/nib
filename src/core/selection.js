@@ -1,22 +1,6 @@
 import { genKey, qs } from './util'
-import { getValue, findBlk, findMark, reverseMark, flatten } from '../model/util'
-
-function findUpAttr (el, attrName, thresholdClass = 'nib-editor') {
-	while (el.parentNode) {
-		el = el.parentNode
-		if (el.hasAttribute(attrName)) return el
-		else if (el.classList.contains(thresholdClass)) break
-	}
-	return null
-}
-
-function findTextProgeny (el) {
-	while (el.firstChild){
-		el = el.firstChild
-		if (el.nodeType == 3) return el
-	}
-	return null
-}
+import Blk from '../model/blk'
+import { tick } from 'svelte'
 
 class Selection {
 	constructor (editor, store) {
@@ -28,8 +12,9 @@ class Selection {
 		this.sel = {
 			anchor: {},
 			focus: {},
-			lastBlkKey:'',
-			isCollapsed: true
+			blurKey:'',
+			isCollapsed: true,
+			focused: true
 		}
 		this.eventPool = {}
 		window.addEventListener('mouseup', e => {
@@ -40,12 +25,13 @@ class Selection {
 		window.addEventListener('keyup', e => this.locate())
 	}
 
-	// assign onChange callback fns
+	// assign onChange callback fn
 	onChange (cb) {
 		this.eventPool[genKey()] = cb
 	}
 	// cast onChange callback fn
 	dispatch (data){
+		console.log(data)
 		let eventKeys = Object.keys(this.eventPool)
 		if (eventKeys.length == 0) return
 		eventKeys.forEach(id => {
@@ -72,20 +58,19 @@ class Selection {
 				focusNode = backward ? sel.anchorNode : sel.focusNode,
 				anchorOffset = backward ? sel.focusOffset : sel.anchorOffset,
 				focusOffset = backward ? sel.anchorOffset : sel.focusOffset,
-				startNode = findUpAttr(anchorNode, 'data-nib-text'),
-				startBlk = findUpAttr(anchorNode, 'data-nib-blk'),
-				endNode = findUpAttr(focusNode, 'data-nib-text'),
-				endBlk = findUpAttr(focusNode, 'data-nib-blk')
-			let anchorNodeIndex = startNode.getAttribute('data-offset') ? parseInt(startNode.getAttribute('data-offset').split(':')[1]) : 0,
-				anchorKey = startBlk.getAttribute('data-key'),
-				anchorBlk = findBlk(storeVal, anchorKey)
-			//
-			let focusNodeIndex = startNode.getAttribute('data-offset') ? parseInt(endNode.getAttribute('data-offset').split(':')[1]) : 0,
-				focusKey = endBlk.getAttribute('data-key'),
-				focusBlk = findBlk(storeVal, focusKey)
+				startNode = this.findUpAttr(anchorNode, 'data-nib-text'),
+				endNode = this.findUpAttr(focusNode, 'data-nib-text')
+			// get point info
+			let anchorNodeIndex = parseInt(startNode.dataset.index) || 0,
+				anchorKey = startNode.dataset.key,
+				anchorBlk = Blk.find(storeVal, anchorKey)
+			let focusNodeIndex = parseInt(endNode.dataset.index) || 0,
+				focusKey = endNode.dataset.key,
+				focusBlk = Blk.find(storeVal, focusKey)
 			/*
 			* get anchor and focus
 			* -- Terminology --
+				 point: start or end of a selection
 				 anchor: starting point
 				 focus: ending point
 				 key: key of blk
@@ -99,16 +84,16 @@ class Selection {
 				path: anchorBlk.blkPath,
 				node: anchorNodeIndex,
 				offset: anchorOffset,
-				mark: findMark(anchorBlk.blkVal, anchorNodeIndex, anchorOffset)
+				mark: Blk.mark(anchorBlk.blkVal, anchorNodeIndex, anchorOffset)
 			}
 			selection['focus'] = {
 				key: focusKey,
 				path: focusBlk.blkPath,
 				node: focusNodeIndex,
 				offset: focusOffset,
-				mark: findMark(focusBlk.blkVal, focusNodeIndex, focusOffset)
+				mark: Blk.mark(focusBlk.blkVal, focusNodeIndex, focusOffset)
 			}
-			// get in between
+/*			// get in between
 			let flatted = flatten(storeVal)
 			let fkAnchor = flatted.keys.indexOf(anchorKey),
 				fkFocus = flatted.keys.indexOf(focusKey),
@@ -124,7 +109,7 @@ class Selection {
 					path: flatted.paths[fkAnchor - 1].split('.').map(n=>parseInt(n)),
 					key: flatted.keys[fkAnchor - 1]
 				}
-			}
+			}*/
 			selection.isCollapsed = sel.isCollapsed
 			selection.blurKey =  this.sel.anchor.key == selection.anchor.key ? null : (this.sel.anchor.key || null)
 			selection.focused = true
@@ -138,31 +123,38 @@ class Selection {
 		}
 	}
 
-	select (sel) {
-		let range = document.createRange(),
-			windowSel = window.getSelection(),
-			storeVal = this.store.getState(),
-			anchorBlkVal = sel.anchor.path ? getValue(storeVal, sel.anchor.path) : findBlk(storeVal, sel.anchor.key).blkVal,
+	async select (sel) {
+		// Wait till any pending state changes have been applied and render to DOM by svelte!
+		await tick()
+		//
+		let storeVal = this.store.getState()
+		// get blk value
+		let anchorBlkVal = sel.anchor.path ? Blk.get(storeVal, sel.anchor.path) : Blk.find(storeVal, sel.anchor.key).blkVal,
 			focusBlkVal
 		if (!sel.focus) sel.focus = sel.anchor
 		if (sel.anchor.key == sel.focus.key){
 			focusBlkVal = anchorBlkVal
 		} else {
-			focusBlkVal = sel.focus.path ? getValue(storeVal, sel.focus.path) : findBlk(storeVal, sel.focus.key).blkVal
+			focusBlkVal = sel.focus.path ? Blk.get(storeVal, sel.focus.path) : Blk.find(storeVal, sel.focus.key).blkVal
 		}
 		// locate nodeIndex and offset
-		let anchor = reverseMark(anchorBlkVal, sel.anchor.mark, true),
-			focus = reverseMark(focusBlkVal, sel.focus.mark, false)
+		let anchor = Blk.locateMark(anchorBlkVal, sel.anchor.mark, true),
+			focus = Blk.locateMark(focusBlkVal, sel.focus.mark, false)
 		// query select elements
-		let startTextNode = qs(`[data-offset="${sel.anchor.key + ':' + anchor.nodeIndex}"]`),
-			endTextNode = qs(`[data-offset="${sel.focus.key + ':' + focus.nodeIndex}"]`)
+		let startTextNode = qs(`[data-key='${sel.anchor.key}'][data-index='${anchor.nodeIndex}']`),
+			endTextNode = qs(`[data-key='${sel.focus.key}'][data-index='${focus.nodeIndex}']`)
 		if (!startTextNode || !endTextNode) return
-		startTextNode = findTextProgeny(startTextNode)
-		endTextNode = findTextProgeny(endTextNode)
+		// find text progeny element
+		startTextNode = this.findTextProgeny(startTextNode)
+		endTextNode = this.findTextProgeny(endTextNode)
+		// set range and add to window selection
+		let range = document.createRange(),
+			windowSel = window.getSelection()
 		range.setStart(startTextNode, anchor.offset)
 		range.setEnd(endTextNode, focus.offset)
 		windowSel.removeAllRanges()
 		windowSel.addRange(range)
+		// update selection
 		this.locate()
 	}
 
@@ -171,6 +163,38 @@ class Selection {
 		if (!this.sel) return
 		this.select(sel)
 	}
+
+	// utils
+
+	/**
+	 * return the parent node element which has certain attribute name
+	 * @param {Element|Node} el
+	 * @param attrName
+	 * @param thresholdClass
+	 * @returns {(Node|Element|null}
+	 */
+	findUpAttr (el, attrName, thresholdClass = 'nib-editor') {
+		while (el.parentNode) {
+			el = el.parentNode
+			if (el.hasAttribute(attrName)) return el
+			else if (el.classList.contains(thresholdClass)) break
+		}
+		return null
+	}
+
+	/**
+	 * find the closet text element progeny
+	 * @param el
+	 * @returns {Node|null}
+	 */
+	findTextProgeny (el) {
+		while (el.firstChild){
+			el = el.firstChild
+			if (el.nodeType == 3) return el
+		}
+		return null
+	}
+
 }
 
 export default Selection

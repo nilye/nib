@@ -1,6 +1,6 @@
-import { genKey, listen } from './util'
+import { listen } from './util'
 import { upperMerge } from '../model/operator'
-import { blkTextContent, getValue } from '../model/util'
+import Blk from '../model/blk'
 
 class EventBus {
 	constructor (selection, store) {
@@ -76,22 +76,8 @@ class EventBus {
 		1. isCollapsed and anchor mark == 0
 		2. select more than one blk - anchor key and focus key is different
 		*/
-		const upperMergeCondition = (this.sel.isCollapsed && this.sel.anchor.mark == 0) || (this.sel.anchor.key != this.sel.focus.key)
-		if (e.key == 'Backspace' && upperMergeCondition){
-			let sel = {
-				anchor:{
-					key: this.sel.prev.key,
-					path: this.sel.prev.path,
-					mark: blkTextContent(getValue(this.store.getState(), this.sel.prev.path)).length
-				}
-			}
-			upperMerge(this.store, this.sel)
-			console.log(sel)
-			this.selection.select(sel)
-			e.preventDefault()
-		} else {
-			this.emitEditorEvt('keydown', e)
-		}
+
+		this.emitEditorEvt('keydown', e)
 	}
 
 }
