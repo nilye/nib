@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es6",
+    "noImplicitAny": false,
+    "sourceMap": true,
+    "lib": [
+      "es6",
+      "dom"
+    ],
+    "typeRoots": [
+      "custom.d.ts",
+      "node_modules/@types"
+    ],
+    "types": [
+      "jest",
+      "svelte",
+      "lodash",
+      "node"
+    ]
+  },
+  "include": [
+    "src/**.*.ts",
+    "src/**.*.svg",
+    "node_modules/@types/jest"
+  ],
+  "files": [
+    "src/nib-vue/index.ts",
+    "custom.d.ts"
+  ]
+}

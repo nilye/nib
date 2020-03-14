@@ -3,16 +3,50 @@
 <head>
 	<meta charset="UTF-8">
 	<title>Nib</title>
-	<script src="dist/index.js"></script>
-	<link rel="stylesheet" type="text/css" href="dist/main.css">
+	<link rel="stylesheet" type="text/css" href="dist/nib/index.css">
+	<script src="dist/nib-svelte/index.js"></script>
 </head>
 <body>
 <button onclick="_getData()">data</button>
-<div id="cont" style="margin:auto;margin-top:48px; max-width: 640px"></div>
+	<div style="margin:auto;margin-top:48px; max-width: 640px">
+		<div id="cont"></div>
+	</div>
+
 <script>
-	let n = new Nib('#cont',{})
+
+	const initValue = {
+		root: 'root',
+		nodes:[{
+			kind:'blk',
+			type:'p',
+			nodes: [{
+				kind: 'inl',
+				type: 'text',
+				nodes: [{
+					format: {
+						bold:true,
+						italic: true,
+						underline: true
+					},
+					text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.'
+				},{
+					text: 'Maecenas in ultricies sapien. Proin quis sapien velit.'
+				},{
+					text:  'Nullam nisi velit, cursus id enim sit amet, mattis vulputate libero. Vivamus hendrerit, quam sit amet dictum dapibus, lorem enim laoreet mauris, quis blandit elit risus quis elit.'
+				}]
+			}]
+		}]
+	}
+
+	const nib = new NibSvelte({
+		target: document.querySelector('#cont'),
+		props: {
+			initValue: initValue
+		}
+	})
+
 	function _getData(){
-		console.log(n.getData(), n)
+		console.log(nib.value)
 	}
 </script>
 </body>

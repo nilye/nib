@@ -1,0 +1,9 @@
+{
+  "name": "nib",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "umd": "dist/index.js",
+  "author": "Nil",
+  "license": "ISC"
+}
